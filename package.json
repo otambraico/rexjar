@@ -1,0 +1,28 @@
+{
+  "name": "rexjar-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "REXJAR - Sistema de Referencia de Tarifas de Taxi y Rendición de Cuentas",
+  "scripts": {
+    "dev:all": "npm run dev --workspaces",
+    "build:all": "npm run build --workspaces",
+    "test:all": "npm run test --workspaces",
+    "docker:up": "docker-compose -f docker/docker-compose.yml up -d",
+    "docker:down": "docker-compose -f docker/docker-compose.yml down"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "keywords": [
+    "rexjar",
+    "taxi-rates",
+    "h3",
+    "osrm",
+    "expense-management",
+    "pwa",
+    "ocr"
+  ],
+  "author": "REXJAR Team",
+  "license": "UNLICENSED"
+}

@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 16 con PostGIS y esquemas RLS
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: rexjar-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rexjar_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rexjar_pass_2026}
+      POSTGRES_DB: ${POSTGRES_DB:-rexjar_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  # Redis para colas de procesamiento asíncrono (BullMQ / OCR)
+  redis:
+    image: redis:7-alpine
+    container_name: rexjar-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Motor de Ruteo OSRM Autoalojado
+  osrm:
+    image: osrm/osrm-backend:latest
+    container_name: rexjar-osrm
+    restart: always
+    ports:
+      - "5000:5000"
+    command: osrm-routed --algorithm mld /data/map.osrm
+    volumes:
+      - ./osrm/data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
