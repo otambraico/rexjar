@@ -8,8 +8,8 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
-    "@rexjar/shared-types": "workspace:*",
-    "@rexjar/h3-geo-utils": "workspace:*",
+    "@rexjar/shared-types": "*",
+    "@rexjar/h3-geo-utils": "*",
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

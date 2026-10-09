@@ -65,3 +65,5 @@ export function calculateAnomalyScore(declaredFare: number, theoreticalFare: num
 
   return { scorePercent, classification };
 }
+
+export * from './osrmClient';

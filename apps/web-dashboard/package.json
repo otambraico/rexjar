@@ -9,8 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@rexjar/shared-types": "workspace:*",
-    "@rexjar/h3-geo-utils": "workspace:*",
+    "@rexjar/shared-types": "*",
+    "@rexjar/h3-geo-utils": "*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "lucide-react": "^0.309.0"

@@ -2,6 +2,8 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { calculateTheoreticalBaseFare, calculateAnomalyScore, getH3Cell } from '@rexjar/h3-geo-utils';
+import { testDatabaseConnection } from './config/db';
+import { expenseRouter } from './routes/expenseRoutes';
 
 dotenv.config();
 
@@ -93,6 +95,19 @@ app.post('/api/v1/upload/presigned', (req: Request, res: Response) => {
       }
     }
   });
+});
+
+// Rutas de rendición de gastos con scoring H3
+app.use('/api/v1/expenses', expenseRouter);
+
+// Endpoint de salud de Base de Datos
+app.get('/health/db', async (req: Request, res: Response) => {
+  const dbHealth = await testDatabaseConnection();
+  if (dbHealth.ok) {
+    res.json({ status: 'OK', database: 'PostgreSQL (PostGIS + RLS)', version: dbHealth.version });
+  } else {
+    res.status(503).json({ status: 'ERROR', message: dbHealth.error });
+  }
 });
 
 app.listen(PORT, () => {

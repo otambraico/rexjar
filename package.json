@@ -5,7 +5,9 @@
   "description": "REXJAR - Sistema de Referencia de Tarifas de Taxi y Rendición de Cuentas",
   "scripts": {
     "dev:all": "npm run dev --workspaces",
-    "build:all": "npm run build --workspaces",
+    "build:packages": "npm run build --workspace=@rexjar/shared-types --workspace=@rexjar/h3-geo-utils",
+    "build:apps": "npm run build --workspace=@rexjar/backend-api --workspace=@rexjar/mobile-pwa --workspace=@rexjar/web-dashboard",
+    "build:all": "npm run build:packages && npm run build:apps",
     "test:all": "npm run test --workspaces",
     "docker:up": "docker-compose -f docker/docker-compose.yml up -d",
     "docker:down": "docker-compose -f docker/docker-compose.yml down"
