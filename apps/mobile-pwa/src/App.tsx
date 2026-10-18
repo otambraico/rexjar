@@ -15,26 +15,39 @@ export function App() {
           <h1 className="font-bold text-lg text-white">REXJAR Mobile</h1>
         </div>
         
-        {/* Tab Selector */}
-        <div className="flex bg-slate-900 p-1 rounded-lg border border-slate-700 text-xs font-semibold">
-          <button
-            onClick={() => setActiveTab('rendicion')}
-            className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all ${
-              activeTab === 'rendicion' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-            }`}
+        {/* Actions & Tab Selector */}
+        <div className="flex items-center gap-2">
+          <div className="flex bg-slate-900 p-1 rounded-lg border border-slate-700 text-xs font-semibold">
+            <button
+              onClick={() => setActiveTab('rendicion')}
+              className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all ${
+                activeTab === 'rendicion' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Camera size={14} /> Rendición
+            </button>
+            <button
+              onClick={() => setActiveTab('comparator')}
+              className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all ${
+                activeTab === 'comparator' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Car size={14} /> Tarifas Perú
+            </button>
+          </div>
+
+          <a
+            href="http://localhost:5174"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs bg-slate-700 hover:bg-slate-600 text-sky-300 px-2.5 py-1.5 rounded-lg border border-slate-600 transition-colors font-semibold"
+            title="Abrir Portal Empresarial de Auditoría B2B"
           >
-            <Camera size={14} /> Rendición Express
-          </button>
-          <button
-            onClick={() => setActiveTab('comparator')}
-            className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all ${
-              activeTab === 'comparator' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Car size={14} /> Tarifas Perú
-          </button>
+            🏢 Portal B2B
+          </a>
         </div>
       </header>
+
 
       {/* Main Screen Content */}
       <main className="flex-1">

@@ -97,8 +97,26 @@ app.post('/api/v1/upload/presigned', (req: Request, res: Response) => {
   });
 });
 
+import { claimsRouter } from './routes/claimsRoutes';
+import { validateMagicBytes } from './services/fileSecurityService';
+
 // Rutas de rendición de gastos con scoring H3
 app.use('/api/v1/expenses', expenseRouter);
+app.use('/api/v1/claims', claimsRouter);
+
+// Endpoint de verificación binaria de seguridad
+app.post('/api/v1/upload/verify-binary', (req: Request, res: Response) => {
+  const { base64Data } = req.body;
+  if (!base64Data) {
+    return res.status(400).json({ error: 'Falta base64Data' });
+  }
+  const buffer = Buffer.from(base64Data, 'base64');
+  const validation = validateMagicBytes(buffer);
+  if (!validation.isValid) {
+    return res.status(400).json({ success: false, error: validation.error });
+  }
+  res.json({ success: true, detectedMime: validation.detectedMime });
+});
 
 // Endpoint de salud de Base de Datos
 app.get('/health/db', async (req: Request, res: Response) => {

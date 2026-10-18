@@ -94,9 +94,18 @@ export default function Page() {
           <Stat label="Pendientes" value="14" tone="amber" />
           <Stat label="Aprobados hoy" value="42" tone="emerald" />
           <Stat label="Anomalías de Sobreprecio" value="3" tone="rose" />
-          <Button variant="ghost" size="icon" className="ml-1 text-slate-400 hover:bg-slate-700 hover:text-white"><MoreHorizontal /></Button>
+          <a
+            href="http://localhost:5173"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-2 flex items-center gap-1.5 rounded-lg border border-sky-500/40 bg-sky-500/10 px-2.5 py-1 text-[11px] font-semibold text-sky-300 hover:bg-sky-500/20 transition-colors"
+            title="Abrir Front-Office Móvil (PWA) & Tarifas Perú"
+          >
+            📱 App Móvil & Tarifas
+          </a>
         </div>
       </header>
+
 
       <section className="grid min-h-[calc(100vh-60px)] grid-cols-1 xl:grid-cols-[minmax(0,3fr)_minmax(430px,2fr)]">
         <section className="min-w-0 border-r border-slate-800 bg-[#0f172a] p-4 lg:p-5">

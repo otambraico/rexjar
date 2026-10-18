@@ -67,3 +67,5 @@ export function calculateAnomalyScore(declaredFare: number, theoreticalFare: num
 }
 
 export * from './osrmClient';
+export * from './fallbackH3';
+
