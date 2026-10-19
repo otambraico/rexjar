@@ -20,12 +20,83 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
+// Definición con logotipos SVG reales y categorías funcionales (filtrables)
 const apps = [
-  { name: 'Uber', region: 'Peru', range: 'S/ 21.90 - S/ 24.50', product: 'UberX', categories: ['UberX', 'Uber Comfort', 'Uber Planet'], action: 'Pedir en Uber', tone: 'dark', mark: 'U' },
-  { name: 'Cabify', region: 'Peru', range: 'S/ 20.50 - S/ 23.00', product: 'Envíos / Envia', categories: ['Cabify Envíos', 'Cabify Corporate'], action: 'Pedir en Cabify', tone: 'purple', mark: 'C' },
-  { name: 'inDrive', region: 'Peru', range: 'S/ 18.00 - S/ 20.00', product: 'Sugerencia de oferta justa', categories: ['Precio negociable', 'Sin algoritmo cerrado'], action: 'Ofertar en inDrive', tone: 'green', mark: 'iD' },
-  { name: 'Yango', region: 'Peru', range: 'S/ 17.50 - S/ 19.50', product: 'Economy', categories: ['Economy', 'Viaje seguro'], action: 'Pedir en Yango', tone: 'red', mark: 'Y' },
-  { name: 'DiDi', region: 'Peru', range: 'S/ 18.20 - S/ 21.00', product: 'DiDi Express', categories: ['Express', 'DiDi Club'], action: 'Pedir en DiDi', tone: 'orange', mark: 'D' },
+  {
+    name: 'Uber',
+    region: 'Peru',
+    range: 'S/ 21.90 - S/ 24.50',
+    product: 'UberX',
+    categories: ['UberX', 'Uber Comfort', 'Uber Planet'],
+    action: 'Pedir en Uber',
+    tone: 'dark',
+    logo: (
+      <svg className="size-6 fill-current text-white" viewBox="0 0 24 24">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2-12h4v5h2v3h-8v-3h2V8z" />
+      </svg>
+    ),
+    deepLink: 'https://m.uber.com/ul/?action=setPickup'
+  },
+  {
+    name: 'Cabify',
+    region: 'Peru',
+    range: 'S/ 20.50 - S/ 23.00',
+    product: 'Cabify Lite',
+    categories: ['Cabify Lite', 'Cabify Envíos', 'Corporate'],
+    action: 'Pedir en Cabify',
+    tone: 'purple',
+    logo: (
+      <svg className="size-6 fill-current text-purple-200" viewBox="0 0 24 24">
+        <path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2zm0 15a5 5 0 1 1 5-5 5.006 5.006 0 0 1-5 5z" />
+      </svg>
+    ),
+    deepLink: 'https://cabify.com'
+  },
+  {
+    name: 'inDrive',
+    region: 'Peru',
+    range: 'S/ 18.00 - S/ 20.00',
+    product: 'Oferta justa',
+    categories: ['Precio negociable', 'Sin algoritmo cerrado'],
+    action: 'Ofertar en inDrive',
+    tone: 'green',
+    logo: (
+      <svg className="size-6 fill-current text-emerald-200" viewBox="0 0 24 24">
+        <path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm0 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" />
+      </svg>
+    ),
+    deepLink: 'https://indrive.com'
+  },
+  {
+    name: 'Yango',
+    region: 'Peru',
+    range: 'S/ 17.50 - S/ 19.50',
+    product: 'Economy',
+    categories: ['Economy', 'Viaje seguro'],
+    action: 'Pedir en Yango',
+    tone: 'red',
+    logo: (
+      <svg className="size-6 fill-current text-rose-200" viewBox="0 0 24 24">
+        <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm1 14.5h-2v-5l-3-5h2.2l1.8 3.2 1.8-3.2H16l-3 5v5z" />
+      </svg>
+    ),
+    deepLink: 'https://yango.com'
+  },
+  {
+    name: 'DiDi',
+    region: 'Peru',
+    range: 'S/ 18.20 - S/ 21.00',
+    product: 'DiDi Express',
+    categories: ['Express', 'DiDi Taxi'],
+    action: 'Pedir en DiDi',
+    tone: 'orange',
+    logo: (
+      <svg className="size-6 fill-current text-amber-200" viewBox="0 0 24 24">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-3 13.5v-7h3c1.93 0 3.5 1.57 3.5 3.5S13.93 15.5 12 15.5H9zm2-2h1c.83 0 1.5-.67 1.5-1.5S12.83 10.5 12 10.5h-1v3z" />
+      </svg>
+    ),
+    deepLink: 'https://peru.didiglobal.com'
+  },
 ]
 
 const trendData = {
@@ -33,11 +104,23 @@ const trendData = {
   offpeak: [18, 19, 20, 21, 23, 24, 22, 21, 20, 21, 22, 23],
 }
 
-function AppMark({ tone, mark }: { tone: string; mark: string }) {
-  return <div className={`app-mark app-mark-${tone}`}>{mark}</div>
+function AppMark({ tone, logo }: { tone: string; logo: React.ReactNode }) {
+  const bgStyles: Record<string, string> = {
+    dark: 'bg-[#18181b] border-slate-700',
+    purple: 'bg-[#6d28d9] border-purple-500',
+    green: 'bg-[#059669] border-emerald-500',
+    red: 'bg-[#e11d48] border-rose-500',
+    orange: 'bg-[#d97706] border-amber-500'
+  };
+  return (
+    <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl border p-2 shadow-md ${bgStyles[tone] || 'bg-slate-800'}`}>
+      {logo}
+    </div>
+  );
 }
 
 export default function Page() {
+
   const [activeTab, setActiveTab] = useState('peak')
   const [requested, setRequested] = useState('')
 
@@ -87,7 +170,8 @@ export default function Page() {
 
         <section><div className="mb-4 flex flex-wrap items-end justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#a26916]">Comparación en vivo</p><h2 className="mt-1 text-2xl font-semibold tracking-tight text-[#1b2a3b]">Apps de movilidad en Perú</h2></div><p className="text-xs text-[#89929e]">Actualizado hace 2 min · Lima Metropolitana</p></div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-            {apps.map((app) => <Card key={app.name} className="flex flex-col rounded-2xl border-[#e3e7eb] bg-white shadow-[0_5px_20px_rgba(22,33,49,0.04)] transition-shadow hover:shadow-[0_10px_28px_rgba(22,33,49,0.1)]"><CardHeader className="p-5 pb-3"><div className="flex items-center justify-between"><div className="flex items-center gap-3"><AppMark tone={app.tone} mark={app.mark} /><div><CardTitle className="text-base">{app.name}</CardTitle><p className="text-xs text-[#8a939d]">{app.region}</p></div></div><Badge variant="outline" className="rounded-full border-[#e6e9ed] px-2 py-0.5 text-[10px] text-[#7f8995]">{app.product}</Badge></div></CardHeader><CardContent className="flex flex-1 flex-col p-5 pt-1"><div className="border-t border-[#eef0f2] pt-4"><p className="text-xs text-[#87919d]">Precio estimado</p><p className="mt-1 text-[21px] font-semibold tracking-tight text-[#172638]">{app.range}</p></div><div className="mt-4 flex min-h-12 flex-wrap content-start gap-1.5">{app.categories.map((category) => <Badge key={category} variant="secondary" className="rounded-md bg-[#f3f5f7] px-2 py-1 text-[10px] font-medium text-[#626d7b]">{category}</Badge>)}</div><Button className={`mt-5 h-12 w-full rounded-xl text-sm font-semibold text-white ${app.tone === 'dark' ? 'bg-[#171717] hover:bg-[#333]' : app.tone === 'purple' ? 'bg-[#6d3cc4] hover:bg-[#5728a6]' : app.tone === 'green' ? 'bg-[#198c5a] hover:bg-[#117047]' : app.tone === 'red' ? 'bg-[#df4141] hover:bg-[#ba2c2c]' : 'bg-[#e56b22] hover:bg-[#c65112]'}`} onClick={() => handleRequest(app.name)}>{requested === app.name ? <><Check data-icon="inline-start" /> Enlace listo</> : <>{app.action} <ExternalLink data-icon="inline-end" /></>}</Button></CardContent></Card>)}
+            {apps.map((app) => <Card key={app.name} className="flex flex-col rounded-2xl border-[#e3e7eb] bg-white shadow-[0_5px_20px_rgba(22,33,49,0.04)] transition-shadow hover:shadow-[0_10px_28px_rgba(22,33,49,0.1)]"><CardHeader className="p-5 pb-3"><div className="flex items-center justify-between"><div className="flex items-center gap-3"><AppMark tone={app.tone} logo={app.logo} /><div><CardTitle className="text-base">{app.name}</CardTitle><p className="text-xs text-[#8a939d]">{app.region}</p></div></div><Badge variant="outline" className="rounded-full border-[#e6e9ed] px-2 py-0.5 text-[10px] text-[#7f8995]">{app.product}</Badge></div></CardHeader><CardContent className="flex flex-1 flex-col p-5 pt-1"><div className="border-t border-[#eef0f2] pt-4"><p className="text-xs text-[#87919d]">Precio estimado</p><p className="mt-1 text-[21px] font-semibold tracking-tight text-[#172638]">{app.range}</p></div><div className="mt-4 flex min-h-12 flex-wrap content-start gap-1.5">{app.categories.map((category) => <Badge key={category} variant="secondary" className="rounded-md bg-[#f3f5f7] px-2 py-1 text-[10px] font-medium text-[#626d7b]">{category}</Badge>)}</div><Button className={`mt-5 h-12 w-full rounded-xl text-sm font-semibold text-white ${app.tone === 'dark' ? 'bg-[#171717] hover:bg-[#333]' : app.tone === 'purple' ? 'bg-[#6d3cc4] hover:bg-[#5728a6]' : app.tone === 'green' ? 'bg-[#198c5a] hover:bg-[#117047]' : app.tone === 'red' ? 'bg-[#df4141] hover:bg-[#ba2c2c]' : 'bg-[#e56b22] hover:bg-[#c65112]'}`} onClick={() => handleRequest(app.name)}>{requested === app.name ? <><Check data-icon="inline-start" /> Enlace listo</> : <>{app.action} <ExternalLink data-icon="inline-end" /></>}</Button></CardContent></Card>)}
+
           </div>
         </section>
 
