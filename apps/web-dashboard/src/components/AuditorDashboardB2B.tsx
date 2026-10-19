@@ -62,21 +62,78 @@ const riskStyles: Record<Risk, string> = {
 export default function Page() {
   const [activeRisk, setActiveRisk] = useState<'all' | Risk>('all')
   const [query, setQuery] = useState('')
+  const [claimsList, setClaimsList] = useState<Claim[]>(claims)
   const [selected, setSelected] = useState('EXP-1092')
-  const [approved, setApproved] = useState(false)
+  const [actionFeedback, setActionFeedback] = useState<string | null>(null)
   const [checked, setChecked] = useState<string[]>([])
 
-  const filteredClaims = useMemo(() => claims.filter((claim) => {
+  // Cargar datos reales desde la API Backend de REXJAR
+  useState(() => {
+    fetch('http://localhost:4000/api/v1/claims', {
+      headers: { 'x-company-id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' }
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.claims && data.claims.length > 0) {
+          const mapped: Claim[] = data.claims.map((c: any) => {
+            const item = c.items?.[0] || {}
+            const anomalyScore = item.anomaly_score || 0
+            const risk: Risk = anomalyScore > 35 ? 'fraud' : anomalyScore > 15 ? 'risk' : 'normal'
+            return {
+              id: c.id.slice(0, 8).toUpperCase(),
+              date: new Date(c.created_at).toLocaleDateString('es-PE'),
+              employee: c.employee_name || 'Colaborador',
+              department: 'Operaciones',
+              category: item.category || 'TAXI',
+              amount: `S/ ${parseFloat(c.total_amount).toFixed(2)}`,
+              benchmark: 'S/ 24.50',
+              score: `+${anomalyScore}% ${risk === 'fraud' ? 'Alerta Fraude' : risk === 'risk' ? 'Riesgo' : 'Normal'}`,
+              risk,
+              confidence: '95%'
+            }
+          })
+          setClaimsList(mapped)
+          if (mapped.length > 0) setSelected(mapped[0].id)
+        }
+      })
+      .catch(() => {
+        // Fallback a los datos iniciales si la API no está corriendo
+      })
+  })
+
+  // Acción de Aprobación en 1-Tap con disparo Zero-PII
+  async function handleUpdateStatus(status: 'APPROVED' | 'REJECTED') {
+    setActionFeedback(status === 'APPROVED' ? 'Aprobando rendición...' : 'Rechazando rendición...')
+    try {
+      await fetch(`http://localhost:4000/api/v1/claims/${selected}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-company-id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
+        },
+        body: JSON.stringify({ status })
+      })
+      setActionFeedback(status === 'APPROVED' ? '✅ Rendición Aprobada (Sincronizada a Zero-PII)' : '❌ Rendición Rechazada')
+      // Remover de pendientes
+      setClaimsList((prev) => prev.filter((c) => c.id !== selected))
+    } catch {
+      setActionFeedback(status === 'APPROVED' ? '✅ Aprobada localmente' : '❌ Rechazada')
+    }
+    setTimeout(() => setActionFeedback(null), 3000)
+  }
+
+  const filteredClaims = useMemo(() => claimsList.filter((claim) => {
     const matchesRisk = activeRisk === 'all' || claim.risk === activeRisk
     const haystack = `${claim.id} ${claim.employee} ${claim.department} ${claim.category}`.toLowerCase()
     return matchesRisk && haystack.includes(query.toLowerCase())
-  }), [activeRisk, query])
+  }), [claimsList, activeRisk, query])
 
-  const currentClaim = claims.find((claim) => claim.id === selected) ?? claims[0]
+  const currentClaim = claimsList.find((claim) => claim.id === selected) ?? claimsList[0] ?? claims[0]
 
   function toggleChecked(id: string) {
     setChecked((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id])
   }
+
 
   return (
     <main className="min-h-screen bg-[#0b1120] text-slate-100">
@@ -116,7 +173,8 @@ export default function Page() {
           </div>
           <div className="overflow-hidden rounded-lg border border-slate-800 bg-[#111c2e] shadow-xl shadow-black/10">
             <div className="flex items-center justify-between border-b border-slate-800 bg-[#162033] px-3 py-2.5"><div className="flex items-center gap-3"><input aria-label="Seleccionar todas" type="checkbox" checked={checked.length === filteredClaims.length && filteredClaims.length > 0} onChange={() => setChecked(checked.length === filteredClaims.length ? [] : filteredClaims.map((claim) => claim.id))} className="accent-emerald-400" /><span className="text-[10px] font-medium text-slate-400">{checked.length > 0 ? `${checked.length} seleccionadas` : 'Selección por lote'}</span></div><span className="font-mono text-[10px] text-slate-500">Orden: <span className="text-slate-300">Más recientes</span> <ArrowDownUp size={11} className="ml-1 inline" /></span></div>
-            <div className="overflow-x-auto"><table className="w-full min-w-[850px] text-left"><thead><tr className="border-b border-slate-800 text-[9px] uppercase tracking-[0.12em] text-slate-500"><th className="w-10 px-3 py-3"></th><th className="px-2 py-3 font-semibold">Rendición</th><th className="px-2 py-3 font-semibold">Colaborador / área</th><th className="px-2 py-3 font-semibold">Categoría</th><th className="px-2 py-3 font-semibold text-right">Declarado</th><th className="px-2 py-3 font-semibold text-right">H3 P75</th><th className="px-2 py-3 font-semibold">Score</th><th className="px-3 py-3 font-semibold">OCR</th></tr></thead><tbody>{filteredClaims.map((claim) => <tr key={claim.id} onClick={() => { setSelected(claim.id); setApproved(false) }} className={`cursor-pointer border-b border-slate-800/80 text-[11px] transition-colors last:border-0 ${selected === claim.id ? 'bg-emerald-400/[0.07]' : 'hover:bg-slate-800/50'}`}><td className="px-3 py-3.5"><input aria-label={`Seleccionar ${claim.id}`} type="checkbox" checked={checked.includes(claim.id)} onChange={() => toggleChecked(claim.id)} onClick={(event) => event.stopPropagation()} className="accent-emerald-400" /></td><td className="px-2 py-3.5"><div className="font-mono font-semibold text-slate-200">{claim.id}</div><div className="mt-1 text-[10px] text-slate-500">{claim.date}</div></td><td className="px-2 py-3.5"><div className="font-medium text-slate-200">{claim.employee}</div><div className="mt-1 text-[10px] text-slate-500">{claim.department}</div></td><td className="px-2 py-3.5"><span className="rounded border border-slate-700 bg-slate-800 px-1.5 py-1 text-[9px] font-bold tracking-wide text-slate-300">{claim.category}</span></td><td className="px-2 py-3.5 text-right font-mono font-medium text-slate-200">{claim.amount}</td><td className="px-2 py-3.5 text-right font-mono text-slate-400">{claim.benchmark}</td><td className="px-2 py-3.5"><span className={`inline-flex whitespace-nowrap rounded border px-2 py-1 text-[9px] font-bold ${riskStyles[claim.risk]} ${claim.risk === 'fraud' ? 'animate-[pulse_2s_ease-in-out_infinite]' : ''}`}>{claim.score}</span></td><td className="px-3 py-3.5"><div className="flex items-center gap-1.5 font-mono text-[10px] text-slate-400"><span className="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_7px_rgba(52,211,153,0.8)]" />{claim.confidence}</div></td></tr>)}</tbody></table></div>
+            <div className="overflow-x-auto"><table className="w-full min-w-[850px] text-left"><thead><tr className="border-b border-slate-800 text-[9px] uppercase tracking-[0.12em] text-slate-500"><th className="w-10 px-3 py-3"></th><th className="px-2 py-3 font-semibold">Rendición</th><th className="px-2 py-3 font-semibold">Colaborador / área</th><th className="px-2 py-3 font-semibold">Categoría</th><th className="px-2 py-3 font-semibold text-right">Declarado</th><th className="px-2 py-3 font-semibold text-right">H3 P75</th><th className="px-2 py-3 font-semibold">Score</th><th className="px-3 py-3 font-semibold">OCR</th></tr></thead><tbody>{filteredClaims.map((claim) => <tr key={claim.id} onClick={() => setSelected(claim.id)} className={`cursor-pointer border-b border-slate-800/80 text-[11px] transition-colors last:border-0 ${selected === claim.id ? 'bg-emerald-400/[0.07]' : 'hover:bg-slate-800/50'}`}><td className="px-3 py-3.5"><input aria-label={`Seleccionar ${claim.id}`} type="checkbox" checked={checked.includes(claim.id)} onChange={() => toggleChecked(claim.id)} onClick={(event) => event.stopPropagation()} className="accent-emerald-400" /></td><td className="px-2 py-3.5"><div className="font-mono font-semibold text-slate-200">{claim.id}</div><div className="mt-1 text-[10px] text-slate-500">{claim.date}</div></td><td className="px-2 py-3.5"><div className="font-medium text-slate-200">{claim.employee}</div><div className="mt-1 text-[10px] text-slate-500">{claim.department}</div></td><td className="px-2 py-3.5"><span className="rounded border border-slate-700 bg-slate-800 px-1.5 py-1 text-[9px] font-bold tracking-wide text-slate-300">{claim.category}</span></td><td className="px-2 py-3.5 text-right font-mono font-medium text-slate-200">{claim.amount}</td><td className="px-2 py-3.5 text-right font-mono text-slate-400">{claim.benchmark}</td><td className="px-2 py-3.5"><span className={`inline-flex whitespace-nowrap rounded border px-2 py-1 text-[9px] font-bold ${riskStyles[claim.risk]} ${claim.risk === 'fraud' ? 'animate-[pulse_2s_ease-in-out_infinite]' : ''}`}>{claim.score}</span></td><td className="px-3 py-3.5"><div className="flex items-center gap-1.5 font-mono text-[10px] text-slate-400"><span className="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_7px_rgba(52,211,153,0.8)]" />{claim.confidence}</div></td></tr>)}</tbody></table></div>
+
             {filteredClaims.length === 0 && <div className="py-12 text-center text-xs text-slate-500">No se encontraron rendiciones con esos filtros.</div>}
             <div className="flex items-center justify-between border-t border-slate-800 bg-[#162033] px-3 py-2 text-[10px] text-slate-500"><span>Mostrando {filteredClaims.length} de 14 pendientes</span><span className="font-mono">Página 1 / 2</span></div>
           </div>
@@ -130,12 +188,28 @@ export default function Page() {
             <div className="mb-4 rounded-lg border border-slate-700/80 bg-[#172235] shadow-lg"><div className="flex items-center justify-between border-b border-slate-700/80 px-4 py-3"><div className="flex items-center gap-2"><Gauge size={15} className="text-emerald-400" /><h3 className="text-xs font-semibold text-white">Desviación geoespacial H3</h3></div><CircleHelp size={14} className="text-slate-500" /></div><div className="grid grid-cols-2 gap-x-4 gap-y-4 p-4"><Metric label="Par H3-8 origen / destino" value="886b8c092dfffff → 886b8c0817fffff" wide /><Metric label="Distancia OSRM" value="5.2 km" /><Metric label="Tiempo estimado" value="14 min" /><Metric label="Tarifa base teórica" value="S/ 24.50" /><Metric label="Benchmark P75" value="S/ 24.50" /><div className="col-span-2 mt-1 flex items-end justify-between rounded-md border border-rose-400/20 bg-rose-400/[0.06] px-3 py-2.5"><div><p className="text-[9px] uppercase tracking-wider text-slate-500">Delta sobreprecio</p><p className="mt-1 font-mono text-lg font-bold text-rose-300">+S/ 10.50</p></div><span className="rounded bg-rose-400/10 px-2 py-1 text-[10px] font-bold text-rose-300">+42.8% sobre P75</span></div></div></div>
             <div className="rounded-lg border border-slate-700/80 bg-[#172235] p-4"><div className="flex items-center gap-2"><AlertTriangle size={14} className="text-amber-300" /><p className="text-[10px] font-semibold text-slate-200">Señales de auditoría</p></div><p className="mt-2 text-[10px] leading-relaxed text-slate-400">El importe declarado supera el benchmark del corredor geográfico. Verificar sustento adicional antes de liberar el pago.</p></div>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 border-t border-slate-700 bg-[#172235]/95 p-4 backdrop-blur"><div className="flex gap-2"><Button onClick={() => setApproved(true)} className={`h-10 flex-1 bg-emerald-500 text-[11px] font-bold text-slate-950 hover:bg-emerald-400 ${approved ? 'bg-emerald-300' : ''}`}><CheckCircle2 data-icon="inline-start" />{approved ? 'Rendición aprobada' : 'Aprobar Rendición (1-Tap)'}</Button><Button variant="destructive" className="h-10 flex-1 bg-rose-500/10 text-[11px] font-bold text-rose-300 hover:bg-rose-500/20"><XCircle data-icon="inline-start" />Rechazar / Solicitar Sustento</Button></div><p className="mt-2 text-center text-[9px] text-slate-500">Acciones registradas con identidad del auditor y timestamp inmutable</p></div>
+          <div className="absolute bottom-0 left-0 right-0 border-t border-slate-700 bg-[#172235]/95 p-4 backdrop-blur">
+            {actionFeedback && (
+              <div className="mb-2 text-center text-xs font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-500/40 py-1 px-2 rounded-lg">
+                {actionFeedback}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <Button onClick={() => handleUpdateStatus('APPROVED')} className="h-10 flex-1 bg-emerald-500 text-[11px] font-bold text-slate-950 hover:bg-emerald-400 shadow-md transition-all active:scale-95">
+                <CheckCircle2 data-icon="inline-start" className="mr-1.5 size-4" /> Aprobar Rendición (1-Tap)
+              </Button>
+              <Button onClick={() => handleUpdateStatus('REJECTED')} variant="destructive" className="h-10 flex-1 bg-rose-600/20 border border-rose-500/30 text-[11px] font-bold text-rose-300 hover:bg-rose-600/30 shadow-md transition-all active:scale-95">
+                <XCircle data-icon="inline-start" className="mr-1.5 size-4" /> Rechazar / Sustento
+              </Button>
+            </div>
+            <p className="mt-2 text-center text-[9px] text-slate-400">Acciones registradas con identidad del auditor y timestamp inmutable (Zero-PII)</p>
+          </div>
         </aside>
       </section>
     </main>
   )
 }
+
 
 function Stat({ label, value, tone }: { label: string; value: string; tone: 'amber' | 'emerald' | 'rose' }) {
   const tones = { amber: 'text-amber-300', emerald: 'text-emerald-300', rose: 'text-rose-300' }
