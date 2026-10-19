@@ -135,12 +135,20 @@ export default function Page() {
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-5 py-4 lg:px-10">
           <div className="flex items-center gap-3">
             <div className="flex size-9 items-center justify-center rounded-xl bg-[#102b4e] text-white shadow-sm"><Route /></div>
-            <div><p className="text-[15px] font-bold tracking-tight">REXJAR</p><p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#7b8490]">Mobility intelligence</p></div>
+            <div><p className="text-[15px] font-bold tracking-tight text-slate-900">REXJAR</p><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#2b80a8]">Tarifas de Taxi Perú</p></div>
           </div>
-          <div className="hidden items-center gap-6 text-sm text-[#647080] md:flex"><span className="font-medium text-[#102b4e]">Comparador de tarifas</span><span>Metodología</span><span>Para empresas</span></div>
-          <Button variant="outline" size="sm" className="rounded-full border-[#dfe3e8] text-[#4b5563]">Acceso corporativo <ChevronDown data-icon="inline-end" /></Button>
+          <a
+            href="http://localhost:5174"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-800 shadow-sm transition-all hover:bg-slate-50 hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+            aria-label="Acceder al portal corporativo de auditoría y empresas REXJAR"
+          >
+            🏢 Acceso corporativo <ExternalLink className="size-3.5 text-slate-500" />
+          </a>
         </div>
       </header>
+
 
       <div className="mx-auto max-w-[1400px] px-5 py-9 lg:px-10 lg:py-12">
         <section className="mb-8 max-w-3xl">
