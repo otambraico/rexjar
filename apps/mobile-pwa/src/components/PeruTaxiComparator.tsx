@@ -430,7 +430,84 @@ export default function Page() {
         </section>
 
         <section className="mt-8 grid gap-5 lg:grid-cols-[1.35fr_0.65fr]">
-          <Card className="rounded-2xl border-[#e3e7eb] bg-white shadow-[0_5px_20px_rgba(22,33,49,0.04)]"><CardHeader className="p-6 pb-2"><div className="flex flex-wrap items-start justify-between gap-3"><div><CardTitle className="text-lg">Tendencia histórica de precios</CardTitle><CardDescription className="mt-1">Percentiles por hora para rutas similares en Lima.</CardDescription></div><Badge variant="outline" className="rounded-full border-[#dce4ea] text-xs text-[#697482]">Últimos 30 días</Badge></div></CardHeader><CardContent className="p-6 pt-4"><Tabs value={activeTab} onValueChange={setActiveTab}><TabsList className="mb-5 rounded-lg bg-[#f3f5f7] p-1"><TabsTrigger value="peak" className="rounded-md px-4 text-xs">Hora punta</TabsTrigger><TabsTrigger value="offpeak" className="rounded-md px-4 text-xs">Fuera de punta</TabsTrigger></TabsList><TabsContent value={activeTab} className="mt-0"><div className="relative h-48 border-b border-l border-[#e6e9ed] pl-4"><div className="absolute inset-x-4 top-0 border-t border-dashed border-[#eef0f2]" /><div className="absolute inset-x-4 top-1/2 border-t border-dashed border-[#eef0f2]" /><div className="flex h-full items-end gap-2 px-2 sm:gap-4">{trendData[activeTab as keyof typeof trendData].map((height, index) => <div key={index} className="group relative flex h-full flex-1 items-end"><div className={`w-full rounded-t-md transition-all ${activeTab === 'peak' ? 'bg-[#2d7f9e] hover:bg-[#246b86]' : 'bg-[#9abecb] hover:bg-[#75a6b7]'}`} style={{ height: `${height * 1.55}%` }}><span className="absolute -top-6 left-1/2 hidden -translate-x-1/2 rounded bg-[#172638] px-1.5 py-0.5 text-[10px] text-white group-hover:block">S/ {height}</span></div></div>)}</div><div className="absolute -left-1 top-0 -translate-y-1/2 text-[10px] text-[#9aa3ad]">S/ 55</div><div className="absolute -left-1 top-1/2 -translate-y-1/2 text-[10px] text-[#9aa3ad]">S/ 30</div></div><div className="mt-3 flex justify-between pl-4 text-[10px] text-[#9aa3ad]"><span>06:00</span><span>09:00</span><span>12:00</span><span>15:00</span><span>18:00</span><span>21:00</span></div><div className="mt-5 flex flex-wrap gap-4 text-xs text-[#697482]"><span className="flex items-center gap-2"><i className="size-2 rounded-full bg-[#2d7f9e]" /> P50 mediana</span><span className="flex items-center gap-2"><i className="size-2 rounded-full bg-[#d7942c]" /> P75 alta demanda</span><span className="flex items-center gap-2"><i className="size-2 rounded-full bg-[#b9c8d3]" /> P25 baja demanda</span></div></TabsContent></Tabs></CardContent></Card>
+          <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
+            <CardHeader className="p-6 pb-2">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <CardTitle className="text-lg font-bold text-slate-900">Tendencia histórica de precios</CardTitle>
+                  <CardDescription className="mt-1 text-slate-500">Percentiles por hora para rutas similares en Lima.</CardDescription>
+                </div>
+                <Badge variant="outline" className="rounded-full border-slate-300 bg-slate-50 text-xs font-semibold text-slate-700">
+                  Últimos 30 días
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 pt-4">
+              {/* Selector de Horarios con Alto Contraste */}
+              <div className="mb-5 inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('peak')}
+                  className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
+                    activeTab === 'peak'
+                      ? 'bg-slate-900 text-white shadow-sm'
+                      : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/70'
+                  }`}
+                >
+                  ⏰ Hora punta
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('offpeak')}
+                  className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
+                    activeTab === 'offpeak'
+                      ? 'bg-slate-900 text-white shadow-sm'
+                      : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/70'
+                  }`}
+                >
+                  🌤️ Fuera de punta
+                </button>
+              </div>
+
+              <div>
+                <div className="relative h-48 border-b border-l border-slate-200 pl-4">
+                  <div className="absolute inset-x-4 top-0 border-t border-dashed border-slate-200" />
+                  <div className="absolute inset-x-4 top-1/2 border-t border-dashed border-slate-200" />
+                  <div className="flex h-full items-end gap-2 px-2 sm:gap-4">
+                    {trendData[activeTab as keyof typeof trendData].map((height, index) => (
+                      <div key={index} className="group relative flex h-full flex-1 items-end">
+                        <div 
+                          className={`w-full rounded-t-md transition-all ${
+                            activeTab === 'peak' ? 'bg-[#2d7f9e] hover:bg-[#1f5a70]' : 'bg-[#6ba4b8] hover:bg-[#52899c]'
+                          }`} 
+                          style={{ height: `${height * 1.55}%` }}
+                        >
+                          <span className="absolute -top-7 left-1/2 hidden -translate-x-1/2 rounded bg-slate-900 px-2 py-0.5 text-[11px] font-bold text-white shadow-md group-hover:block z-10">
+                            S/ {height}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="absolute -left-1 top-0 -translate-y-1/2 text-[10px] font-bold text-slate-500">S/ 55</div>
+                  <div className="absolute -left-1 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-500">S/ 30</div>
+                </div>
+                <div className="mt-3 flex justify-between pl-4 text-[10px] font-bold text-slate-500">
+                  <span>06:00</span>
+                  <span>09:00</span>
+                  <span>12:00</span>
+                  <span>15:00</span>
+                  <span>18:00</span>
+                  <span>21:00</span>
+                </div>
+                <div className="mt-5 flex flex-wrap gap-4 text-xs font-semibold text-slate-600">
+                  <span className="flex items-center gap-2"><i className="size-2 rounded-full bg-[#2d7f9e]" /> P50 mediana</span>
+                  <span className="flex items-center gap-2"><i className="size-2 rounded-full bg-[#d7942c]" /> P75 alta demanda</span>
+                  <span className="flex items-center gap-2"><i className="size-2 rounded-full bg-[#94a3b8]" /> P25 baja demanda</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
           <Card className="rounded-2xl border-[#e3e7eb] bg-[#eef6f7] shadow-none"><CardHeader className="p-6 pb-2"><div className="flex items-center justify-between"><CardTitle className="text-lg">Vista de celda H3</CardTitle><Badge className="rounded-full bg-[#d8ecee] text-[10px] text-[#276b7c]">Resolución 8</Badge></div><CardDescription className="mt-1 text-[#64818b]">Concentración de viajes verificados en la ruta.</CardDescription></CardHeader><CardContent className="p-6 pt-4"><div className="relative flex h-44 items-center justify-center overflow-hidden rounded-xl border border-[#cfe3e5] bg-[#dceff0]"><div className="absolute inset-0 opacity-50" style={{ backgroundImage: 'linear-gradient(30deg, #b7d6d9 12%, transparent 12.5%, transparent 87%, #b7d6d9 87.5%), linear-gradient(150deg, #b7d6d9 12%, transparent 12.5%, transparent 87%, #b7d6d9 87.5%), linear-gradient(30deg, #b7d6d9 12%, transparent 12.5%, transparent 87%, #b7d6d9 87.5%), linear-gradient(150deg, #b7d6d9 12%, transparent 12.5%, transparent 87%, #b7d6d9 87.5%)', backgroundSize: '38px 66px', backgroundPosition: '0 0, 0 0, 19px 33px, 19px 33px' }} /><div className="relative flex items-center gap-2"><div className="flex size-12 items-center justify-center rounded-lg border-2 border-white bg-[#388a9e] text-white shadow-md"><MapPin /></div><div className="h-1 w-16 rounded-full bg-[#d7942c] shadow-sm" /><div className="flex size-12 items-center justify-center rounded-lg border-2 border-white bg-[#1d5873] text-white shadow-md"><MapPin /></div></div><div className="absolute bottom-3 left-3 rounded-md bg-white/80 px-2 py-1 font-mono text-[9px] text-[#52737d]">H3-8 · Lima</div></div><div className="mt-4 flex items-center justify-between text-xs"><span className="text-[#64818b]">Cobertura de muestra</span><span className="font-semibold text-[#276b7c]">Alta · 1,420 viajes</span></div></CardContent></Card>
         </section>
         <footer className="mt-10 flex flex-col gap-2 border-t border-[#e3e7eb] pt-5 text-[11px] text-[#89929e] sm:flex-row sm:items-center sm:justify-between"><span>REXJAR · Referencia independiente de movilidad urbana</span><span>Los precios son estimaciones y pueden variar según disponibilidad y demanda.</span></footer>
