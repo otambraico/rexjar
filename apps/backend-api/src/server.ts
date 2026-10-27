@@ -98,7 +98,11 @@ app.post('/api/v1/upload/presigned', (req: Request, res: Response) => {
 });
 
 import { claimsRouter } from './routes/claimsRoutes';
+import { authRouter } from './routes/authRoutes';
 import { validateMagicBytes } from './services/fileSecurityService';
+
+// Rutas de autenticación y gestión de usuarios
+app.use('/api/v1/auth', authRouter);
 
 // Rutas de rendición de gastos con scoring H3
 app.use('/api/v1/expenses', expenseRouter);
