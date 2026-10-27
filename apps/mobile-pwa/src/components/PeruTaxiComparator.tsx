@@ -101,10 +101,26 @@ const apps = [
   },
 ]
 
-const trendData = {
-  peak: [25, 28, 34, 42, 49, 46, 39, 33, 30, 35, 44, 51],
-  offpeak: [18, 19, 20, 21, 23, 24, 22, 21, 20, 21, 22, 23],
-}
+// Franjas horarias y factores dinámicos para Lima Metropolitana (12 intervalos)
+const HOUR_SLOTS = [
+  { hour: '06:00', label: '06h' },
+  { hour: '07:30', label: '07:30' },
+  { hour: '08:30', label: '08:30' },
+  { hour: '09:30', label: '09:30' },
+  { hour: '11:00', label: '11h' },
+  { hour: '13:00', label: '13h' },
+  { hour: '15:00', label: '15h' },
+  { hour: '17:00', label: '17h' },
+  { hour: '18:30', label: '18:30' },
+  { hour: '19:30', label: '19:30' },
+  { hour: '21:00', label: '21h' },
+  { hour: '22:30', label: '22:30' },
+];
+
+const HOURLY_MULTIPLIERS = {
+  peak: [1.08, 1.30, 1.44, 1.32, 1.05, 1.02, 1.07, 1.25, 1.45, 1.36, 1.15, 1.00],
+  offpeak: [0.94, 0.98, 1.04, 1.00, 0.95, 0.93, 0.96, 1.02, 1.06, 1.03, 0.97, 0.92]
+};
 
 function AppMark({ tone, logo }: { tone: string; logo: React.ReactNode }) {
   const bgStyles: Record<string, string> = {
@@ -141,8 +157,9 @@ function estimateDurationMin(distanceKm: number): number {
 }
 
 export default function Page() {
-  const [activeTab, setActiveTab] = useState('peak')
+  const [activeTab, setActiveTab] = useState<'peak' | 'offpeak'>('peak')
   const [requested, setRequested] = useState('')
+  const [baseFare, setBaseFare] = useState<number>(20.50)
   const [originPlace, setOriginPlace] = useState<PlaceItem>({
     id: 'poi-jockey-plaza',
     title: 'Jockey Plaza Shopping Center',
@@ -201,6 +218,7 @@ export default function Page() {
       const data = await response.json()
       if (data.success && data.data) {
         const tBase = data.data.theoreticalBaseFare
+        setBaseFare(tBase)
         const p25 = (tBase * 0.95).toFixed(2)
         const p75 = (tBase * 1.15).toFixed(2)
         setRouteMetrics({
@@ -219,7 +237,8 @@ export default function Page() {
       }
     } catch {
       // Fallback reactivo si el backend estuviera detenido
-      const fallbackBase = 4.5 + calculatedDist * 1.8 + calculatedDur * 0.35
+      const fallbackBase = parseFloat((4.5 + calculatedDist * 1.8 + calculatedDur * 0.35).toFixed(2))
+      setBaseFare(fallbackBase)
       setRouteMetrics((prev) => ({
         ...prev,
         distance: `${calculatedDist} km`,
@@ -430,114 +449,151 @@ export default function Page() {
         </section>
 
         <section className="mt-8">
-          <Card className="w-full rounded-2xl border-slate-200 bg-white shadow-sm">
-            <CardHeader className="p-6 pb-3">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <CardTitle className="text-xl font-bold text-slate-900">Tendencia histórica de precios en Lima</CardTitle>
-                  <CardDescription className="mt-1 text-slate-500">
-                    Comportamiento de la tarifa por horario y percentiles de demanda en rutas urbanas.
-                  </CardDescription>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="outline" className="rounded-full border-slate-300 bg-slate-50 text-xs font-semibold text-slate-700">
-                    Últimos 30 días
-                  </Badge>
-                  <Badge variant="outline" className="rounded-full border-blue-200 bg-blue-50 text-xs font-semibold text-blue-700">
-                    Muestra calibrada
-                  </Badge>
-                </div>
-              </div>
-            </CardHeader>
+          {(() => {
+            const activeMultipliers = HOURLY_MULTIPLIERS[activeTab]
+            const dynamicPrices = activeMultipliers.map((mult) => parseFloat((baseFare * mult).toFixed(2)))
+            const maxDynamicPrice = Math.max(15, Math.ceil((baseFare * 1.55) / 5) * 5)
+            const midDynamicPrice = Math.round(baseFare)
+            const minEstimated = Math.min(...dynamicPrices)
+            const maxEstimated = Math.max(...dynamicPrices)
 
-            <CardContent className="p-6 pt-2">
-              {/* Selector de Horarios con Alto Contraste */}
-              <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-                <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('peak')}
-                    className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
-                      activeTab === 'peak'
-                        ? 'bg-slate-900 text-white shadow-sm'
-                        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/70'
-                    }`}
-                  >
-                    ⏰ Horas punta (07:00 - 09:30 / 18:00 - 21:00)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('offpeak')}
-                    className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
-                      activeTab === 'offpeak'
-                        ? 'bg-slate-900 text-white shadow-sm'
-                        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/70'
-                    }`}
-                  >
-                    🌤️ Fuera de punta (Valle)
-                  </button>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-600">
-                  <span className="flex items-center gap-2"><i className="size-2.5 rounded-full bg-[#2d7f9e]" /> P50 Mediana</span>
-                  <span className="flex items-center gap-2"><i className="size-2.5 rounded-full bg-[#d7942c]" /> P75 Alta demanda</span>
-                  <span className="flex items-center gap-2"><i className="size-2.5 rounded-full bg-[#94a3b8]" /> P25 Baja demanda</span>
-                </div>
-              </div>
-
-              {/* Gráfico a Ancho Completo */}
-              <div className="relative h-56 border-b border-l border-slate-200 pl-6">
-                <div className="absolute inset-x-6 top-0 border-t border-dashed border-slate-200" />
-                <div className="absolute inset-x-6 top-1/2 border-t border-dashed border-slate-200" />
-                
-                <div className="flex h-full items-end gap-2 px-2 sm:gap-4 lg:gap-6">
-                  {trendData[activeTab as keyof typeof trendData].map((height, index) => {
-                    const hours = ['06h', '07h', '08h', '09h', '11h', '13h', '15h', '17h', '18h', '19h', '21h', '23h'];
-                    return (
-                      <div key={index} className="group relative flex h-full flex-1 flex-col items-center justify-end">
-                        <div 
-                          className={`w-full rounded-t-md transition-all ${
-                            activeTab === 'peak' 
-                              ? 'bg-gradient-to-t from-[#1b5e76] to-[#2d7f9e] hover:from-[#154a5d] hover:to-[#22637b]' 
-                              : 'bg-gradient-to-t from-[#52899c] to-[#6ba4b8] hover:from-[#437282] hover:to-[#5a8c9e]'
-                          }`} 
-                          style={{ height: `${height * 1.55}%` }}
-                        >
-                          <span className="absolute -top-8 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-2 py-1 text-[11px] font-bold text-white shadow-xl group-hover:block z-20">
-                            {hours[index]}: S/ {height.toFixed(2)}
-                          </span>
-                        </div>
+            return (
+              <Card className="w-full rounded-2xl border-slate-200 bg-white shadow-sm">
+                <CardHeader className="p-6 pb-4">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-xl font-bold text-slate-900">
+                          Tendencia de precios para tu ruta
+                        </CardTitle>
+                        <Badge variant="outline" className="rounded-full border-emerald-300 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
+                          ⚡ 100% Dinámico
+                        </Badge>
                       </div>
-                    );
-                  })}
-                </div>
 
-                <div className="absolute -left-1 top-0 -translate-y-1/2 text-[10px] font-bold text-slate-500">S/ 55</div>
-                <div className="absolute -left-1 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-500">S/ 30</div>
-              </div>
+                      {/* Etiquetas de la Ruta Seleccionada */}
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 border border-slate-200 px-3 py-1 text-xs font-bold text-slate-800">
+                          <span className="text-blue-600 font-bold">●</span> {originPlace.title.split('(')[0].trim()}
+                        </span>
+                        <span className="text-slate-400 font-extrabold text-xs">➔</span>
+                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 border border-slate-200 px-3 py-1 text-xs font-bold text-slate-800">
+                          <span className="text-amber-600 font-bold">●</span> {destinationPlace.title.split('(')[0].trim()}
+                        </span>
+                        <Badge variant="secondary" className="rounded-lg bg-blue-50 border border-blue-200 text-xs font-bold text-blue-700">
+                          {routeMetrics.distance} · {routeMetrics.duration}
+                        </Badge>
+                      </div>
+                    </div>
 
-              {/* Eje de Horas */}
-              <div className="mt-3 flex justify-between pl-6 text-[11px] font-bold text-slate-500">
-                <span>06:00</span>
-                <span>08:00</span>
-                <span>10:00</span>
-                <span>12:00</span>
-                <span>14:00</span>
-                <span>16:00</span>
-                <span>18:00</span>
-                <span>20:00</span>
-                <span>22:00</span>
-              </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-right shadow-xs">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Tarifa teórica base</p>
+                        <p className="text-lg font-bold text-slate-900">S/ {baseFare.toFixed(2)}</p>
+                      </div>
+                      <div className="rounded-xl border border-blue-200 bg-blue-50/60 px-4 py-2 text-right shadow-xs">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-blue-700">Rango del día</p>
+                        <p className="text-base font-bold text-blue-900">S/ {minEstimated.toFixed(2)} - S/ {maxEstimated.toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
 
-              {/* Mensaje de Valor Práctico para el Usuario */}
-              <div className="mt-6 flex items-center gap-3 rounded-xl bg-slate-50 border border-slate-200 p-4 text-xs text-slate-600">
-                <span className="text-base">💡</span>
-                <p>
-                  <strong className="font-semibold text-slate-800">Consejo REXJAR:</strong> Durante horas punta (07:30 - 09:30 y 18:00 - 20:30), las tarifas de las aplicaciones en Lima suelen incrementarse entre un <strong>20% y 40%</strong> debido al multiplicador dinámico. Planificar tu salida 20 minutos antes te ubica cerca de la mediana P50.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+                <CardContent className="p-6 pt-2">
+                  {/* Selector de Horarios con Alto Contraste */}
+                  <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+                    <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('peak')}
+                        className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
+                          activeTab === 'peak'
+                            ? 'bg-slate-900 text-white shadow-sm'
+                            : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/70'
+                        }`}
+                      >
+                        ⏰ Horas punta (07:00 - 09:30 / 18:00 - 21:00)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('offpeak')}
+                        className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
+                          activeTab === 'offpeak'
+                            ? 'bg-slate-900 text-white shadow-sm'
+                            : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/70'
+                        }`}
+                      >
+                        🌤️ Fuera de punta (Valle)
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-600">
+                      <span className="flex items-center gap-2"><i className="size-2.5 rounded-full bg-[#2d7f9e]" /> P50 Mediana</span>
+                      <span className="flex items-center gap-2"><i className="size-2.5 rounded-full bg-[#d7942c]" /> P75 Alta demanda</span>
+                      <span className="flex items-center gap-2"><i className="size-2.5 rounded-full bg-[#94a3b8]" /> P25 Baja demanda</span>
+                    </div>
+                  </div>
+
+                  {/* Gráfico a Ancho Completo con Ejes Dinámicos */}
+                  <div className="relative h-56 border-b border-l border-slate-200 pl-8">
+                    <div className="absolute inset-x-8 top-0 border-t border-dashed border-slate-200" />
+                    <div className="absolute inset-x-8 top-1/2 border-t border-dashed border-slate-200" />
+                    
+                    <div className="flex h-full items-end gap-2 px-2 sm:gap-4 lg:gap-6">
+                      {dynamicPrices.map((price, index) => {
+                        const mult = activeMultipliers[index]
+                        const percentDiff = Math.round((mult - 1) * 100)
+                        const percentHeight = Math.min(100, Math.max(16, (price / maxDynamicPrice) * 100))
+                        const slot = HOUR_SLOTS[index]
+
+                        return (
+                          <div key={index} className="group relative flex h-full flex-1 flex-col items-center justify-end">
+                            <div 
+                              className={`w-full rounded-t-md transition-all ${
+                                activeTab === 'peak' 
+                                  ? 'bg-gradient-to-t from-[#1b5e76] to-[#2d7f9e] hover:from-[#154a5d] hover:to-[#22637b]' 
+                                  : 'bg-gradient-to-t from-[#52899c] to-[#6ba4b8] hover:from-[#437282] hover:to-[#5a8c9e]'
+                              }`} 
+                              style={{ height: `${percentHeight}%` }}
+                            >
+                              <span className="absolute -top-9 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1 text-[11px] font-bold text-white shadow-xl group-hover:block z-20">
+                                {slot.hour}: S/ {price.toFixed(2)} ({percentDiff >= 0 ? `+${percentDiff}%` : `${percentDiff}%`})
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    {/* Escala Dinámica en Eje Y */}
+                    <div className="absolute -left-1 top-0 -translate-y-1/2 text-[10px] font-bold text-slate-500">
+                      S/ {maxDynamicPrice}
+                    </div>
+                    <div className="absolute -left-1 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-500">
+                      S/ {midDynamicPrice}
+                    </div>
+                  </div>
+
+                  {/* Eje de Horas */}
+                  <div className="mt-3 flex justify-between pl-8 text-[11px] font-bold text-slate-500">
+                    {HOUR_SLOTS.map((s, idx) => (
+                      <span key={s.hour} className={idx % 2 === 0 ? 'block' : 'hidden sm:block'}>
+                        {s.hour}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Mensaje de Valor Práctico para el Usuario */}
+                  <div className="mt-6 flex items-center gap-3 rounded-xl bg-slate-50 border border-slate-200 p-4 text-xs text-slate-600">
+                    <span className="text-base">💡</span>
+                    <p>
+                      <strong className="font-semibold text-slate-800">Consejo REXJAR:</strong> Para tu ruta entre <strong className="text-slate-900">{originPlace.title.split('(')[0].trim()}</strong> y <strong className="text-slate-900">{destinationPlace.title.split('(')[0].trim()}</strong>, viajar en horarios valle te permite pagar cerca de <strong className="text-slate-900">S/ {minEstimated.toFixed(2)}</strong>, mientras que en hora punta la tarifa dinámica estimada asciende a <strong className="text-slate-900">S/ {maxEstimated.toFixed(2)}</strong>.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })()}
         </section>
         <footer className="mt-10 flex flex-col gap-2 border-t border-[#e3e7eb] pt-5 text-[11px] text-[#89929e] sm:flex-row sm:items-center sm:justify-between"><span>REXJAR · Referencia independiente de movilidad urbana</span><span>Los precios son estimaciones y pueden variar según disponibilidad y demanda.</span></footer>
       </div>
