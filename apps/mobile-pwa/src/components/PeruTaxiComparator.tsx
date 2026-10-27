@@ -19,6 +19,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { PlaceAutocomplete } from './PlaceAutocomplete'
+import { PlaceItem } from '../services/geocodingService'
 
 // Definición con logotipos SVG reales y categorías funcionales (filtrables)
 const apps = [
@@ -119,40 +121,81 @@ function AppMark({ tone, logo }: { tone: string; logo: React.ReactNode }) {
   );
 }
 
+function calculateHaversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const straightDistance = R * c;
+  // Factor de tortuosidad vial promedio en Lima: 1.32
+  return Math.max(1.2, parseFloat((straightDistance * 1.32).toFixed(1)));
+}
+
+function estimateDurationMin(distanceKm: number): number {
+  const minutes = (distanceKm / 20) * 60 + 3;
+  return Math.max(8, Math.round(minutes));
+}
+
 export default function Page() {
   const [activeTab, setActiveTab] = useState('peak')
   const [requested, setRequested] = useState('')
-  const [origin, setOrigin] = useState('Av. Javier Prado Este 4200, Surco, Lima')
-  const [destination, setDestination] = useState('Av. José Pardo 601, Miraflores, Lima')
+  const [originPlace, setOriginPlace] = useState<PlaceItem>({
+    id: 'poi-jockey-plaza',
+    title: 'Jockey Plaza Shopping Center',
+    subtitle: 'Santiago de Surco · Comercial',
+    lat: -12.0863,
+    lng: -76.9763,
+    isLocalPoi: true,
+    category: 'Comercial'
+  })
+  const [destinationPlace, setDestinationPlace] = useState<PlaceItem>({
+    id: 'poi-parque-kennedy',
+    title: 'Parque Kennedy / Óvalo de Miraflores',
+    subtitle: 'Miraflores · Hito Vial',
+    lat: -12.1218,
+    lng: -77.0298,
+    isLocalPoi: true,
+    category: 'Hito Vial'
+  })
   const [isUpdating, setIsUpdating] = useState(false)
   const [routeMetrics, setRouteMetrics] = useState({
-    distance: '5.8 km',
-    duration: '16 min',
-    h3Pair: '886b8c092dfffff → 886b8c0817fffff',
+    distance: '6.8 km',
+    duration: '22 min',
+    h3Pair: '888e62c565fffff → 888e62c0b9fffff',
     volatility: 'Volatilidad moderada · +12%',
-    p25: '18.50',
-    p75: '22.00',
-    uberRange: 'S/ 21.90 - S/ 24.50',
-    cabifyRange: 'S/ 20.50 - S/ 23.00',
-    indriveRange: 'S/ 18.00 - S/ 20.00',
-    yangoRange: 'S/ 17.50 - S/ 19.50',
-    didiRange: 'S/ 18.20 - S/ 21.00'
+    p25: '20.50',
+    p75: '24.50',
+    uberRange: 'S/ 23.90 - S/ 26.50',
+    cabifyRange: 'S/ 22.50 - S/ 25.00',
+    indriveRange: 'S/ 19.50 - S/ 22.00',
+    yangoRange: 'S/ 19.00 - S/ 21.50',
+    didiRange: 'S/ 20.00 - S/ 22.80'
   })
 
-  // Funcionalidad dinámica del botón Actualizar Ruta
-  async function handleUpdateRoute() {
+  // Funcionalidad dinámica del botón Actualizar Ruta conectada con coordenadas reales
+  async function handleUpdateRoute(customOrigin?: PlaceItem, customDest?: PlaceItem) {
+    const o = customOrigin || originPlace
+    const d = customDest || destinationPlace
+
+    const calculatedDist = calculateHaversineKm(o.lat, o.lng, d.lat, d.lng)
+    const calculatedDur = estimateDurationMin(calculatedDist)
+
     setIsUpdating(true)
     try {
       const response = await fetch('http://localhost:4000/api/v1/tariff/estimate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          originLat: -12.1211,
-          originLng: -77.0297,
-          destLat: -12.0972,
-          destLng: -77.0342,
-          distanceKm: origin.length % 2 === 0 ? 6.4 : 5.8,
-          durationMin: origin.length % 2 === 0 ? 18 : 16
+          originLat: o.lat,
+          originLng: o.lng,
+          destLat: d.lat,
+          destLng: d.lng,
+          distanceKm: calculatedDist,
+          durationMin: calculatedDur
         })
       })
       const data = await response.json()
@@ -176,11 +219,14 @@ export default function Page() {
       }
     } catch {
       // Fallback reactivo si el backend estuviera detenido
+      const fallbackBase = 4.5 + calculatedDist * 1.8 + calculatedDur * 0.35
       setRouteMetrics((prev) => ({
         ...prev,
-        distance: '6.2 km',
-        duration: '18 min',
-        volatility: 'Tráfico en tiempo real activo'
+        distance: `${calculatedDist} km`,
+        duration: `${calculatedDur} min`,
+        p25: (fallbackBase * 0.95).toFixed(2),
+        p75: (fallbackBase * 1.15).toFixed(2),
+        volatility: 'Estimación calculada localmente'
       }))
     } finally {
       setIsUpdating(false)
@@ -233,36 +279,38 @@ export default function Page() {
             </div>
           </CardHeader>
           <CardContent className="p-5 lg:p-7">
-            <div className="grid gap-3 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
-              {/* Input Origen - Alto Contraste */}
-              <label className="relative block">
-                <span className="mb-2 block text-xs font-bold text-slate-700">Origen</span>
-                <MapPin className="absolute left-3 top-[38px] size-5 text-blue-600 z-10" />
-                <Input 
-                  value={origin} 
-                  onChange={(e) => setOrigin(e.target.value)} 
-                  placeholder="Dirección o punto de partida..."
-                  className="h-12 rounded-xl border border-slate-300 bg-white pl-10 text-sm font-semibold text-slate-900 shadow-sm placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:border-transparent" 
-                />
-              </label>
+            <div className="grid gap-4 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
+              {/* Autocomplete Origen Híbrido (Local POIs + OpenStreetMap + GPS) */}
+              <PlaceAutocomplete
+                label="Origen"
+                placeholder="Busca un lugar, centro comercial, clínica o estación..."
+                selectedPlace={originPlace}
+                onSelectPlace={(place) => {
+                  setOriginPlace(place)
+                  handleUpdateRoute(place, destinationPlace)
+                }}
+                pinColor="blue"
+                allowCurrentLocation={true}
+              />
 
-              {/* Input Destino - Alto Contraste */}
-              <label className="relative block">
-                <span className="mb-2 block text-xs font-bold text-slate-700">Destino</span>
-                <MapPin className="absolute left-3 top-[38px] size-5 text-amber-600 z-10" />
-                <Input 
-                  value={destination} 
-                  onChange={(e) => setDestination(e.target.value)} 
-                  placeholder="Dirección o punto de llegada..."
-                  className="h-12 rounded-xl border border-slate-300 bg-white pl-10 text-sm font-semibold text-slate-900 shadow-sm placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:border-transparent" 
-                />
-              </label>
+              {/* Autocomplete Destino Híbrido */}
+              <PlaceAutocomplete
+                label="Destino"
+                placeholder="Busca punto de llegada en Lima..."
+                selectedPlace={destinationPlace}
+                onSelectPlace={(place) => {
+                  setDestinationPlace(place)
+                  handleUpdateRoute(originPlace, place)
+                }}
+                pinColor="amber"
+                allowCurrentLocation={false}
+              />
 
               {/* Botón Actualizar Ruta conectado dinámicamente */}
               <Button 
-                onClick={handleUpdateRoute} 
+                onClick={() => handleUpdateRoute()} 
                 disabled={isUpdating}
-                className="h-12 rounded-xl bg-blue-600 px-6 font-bold text-white shadow-md hover:bg-blue-700 active:scale-95 transition-all"
+                className="h-12 rounded-xl bg-blue-600 px-6 font-bold text-white shadow-md hover:bg-blue-700 active:scale-95 transition-all self-end"
               >
                 {isUpdating ? "Calculando..." : "Actualizar ruta"} <ArrowRight className="ml-2 size-4" />
               </Button>
