@@ -316,32 +316,42 @@ export default function Page() {
               </Button>
             </div>
 
-            {/* Métricas Reactivas */}
-            <div className="mt-7 grid gap-4 border-t border-slate-100 pt-5 sm:grid-cols-3 lg:grid-cols-[1fr_1fr_1.5fr_auto]">
-              <div className="flex items-center gap-3">
-                <Navigation className="text-blue-600 size-5" />
+            {/* Métricas Reactivas Centradas y Balanceadas (3 Columnas) */}
+            <div className="mt-7 grid grid-cols-1 gap-4 divide-y divide-slate-100 border-t border-slate-100 pt-5 sm:grid-cols-3 sm:gap-6 sm:divide-y-0 sm:divide-x">
+              {/* Métrica 1: Distancia */}
+              <div className="flex items-center justify-start gap-3.5 sm:justify-center sm:px-4">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                  <Navigation className="size-5" />
+                </div>
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Distancia</p>
-                  <p className="font-bold text-slate-900 text-sm">{routeMetrics.distance}</p>
+                  <p className="text-base font-bold text-slate-900">{routeMetrics.distance}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <Clock3 className="text-blue-600 size-5" />
+
+              {/* Métrica 2: Duración Estimada */}
+              <div className="flex items-center justify-start gap-3.5 pt-3 sm:justify-center sm:pt-0 sm:px-4">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                  <Clock3 className="size-5" />
+                </div>
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Duración estimada</p>
-                  <p className="font-bold text-slate-900 text-sm">{routeMetrics.duration}</p>
+                  <p className="text-base font-bold text-slate-900">{routeMetrics.duration}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <Route className="text-blue-600 size-5" />
+
+              {/* Métrica 3: Estado de Demanda */}
+              <div className="flex items-center justify-start gap-3.5 pt-3 sm:justify-center sm:pt-0 sm:px-4">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                  <TrendingUp className="size-5" />
+                </div>
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Par de celdas H3-8</p>
-                  <p className="font-mono text-xs font-bold text-slate-700">{routeMetrics.h3Pair}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Demanda en ruta</p>
+                  <Badge className="mt-0.5 h-fit rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-800 shadow-none">
+                    {routeMetrics.volatility}
+                  </Badge>
                 </div>
               </div>
-              <Badge className="h-fit justify-center rounded-full border border-amber-300 bg-amber-50 px-3 py-1.5 text-[11px] font-bold text-amber-800">
-                {routeMetrics.volatility}
-              </Badge>
             </div>
           </CardContent>
         </Card>
