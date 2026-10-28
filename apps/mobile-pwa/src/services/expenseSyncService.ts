@@ -1,6 +1,13 @@
 import { db, PendingExpense } from '../db/indexedDB';
+import { getStoredCollaboratorSession } from './authStorage';
 
-const API_BASE_URL = 'http://localhost:4000/api/v1';
+export function getApiBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    const customUrl = localStorage.getItem('rexjar_custom_api_url');
+    if (customUrl) return customUrl.replace(/\/+$/, '');
+  }
+  return (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
+}
 
 /**
  * Optimiza y redimensiona una imagen usando Web Worker con OffscreenCanvas.
@@ -69,12 +76,20 @@ export async function syncPendingExpenses(): Promise<{ synced: number; failed: n
     try {
       await db.pendingExpenses.update(item.id!, { status: 'SYNCING' });
 
-      const response = await fetch(`${API_BASE_URL}/claims`, {
+      const session = getStoredCollaboratorSession();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+
+      if (session?.token) {
+        headers['Authorization'] = `Bearer ${session.token}`;
+      } else {
+        headers['X-Company-ID'] = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+      }
+
+      const response = await fetch(`${getApiBaseUrl()}/claims`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Company-ID': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
-        },
+        headers,
         body: JSON.stringify({
           title: item.claimTitle,
           totalAmount: item.amount,

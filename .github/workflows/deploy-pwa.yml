@@ -1,0 +1,58 @@
+name: Despliegue PWA Móvil en GitHub Pages
+
+on:
+  push:
+    branches: [ master, main ]
+    paths:
+      - 'apps/mobile-pwa/**'
+      - 'packages/**'
+      - '.github/workflows/deploy-pwa.yml'
+  workflow_dispatch:
+
+# Permisos requeridos para desplegar en GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Instalar dependencias del monorepo
+        run: npm install
+
+      - name: Compilar paquetes compartidos (Shared Types & H3 Utils)
+        run: npm run build:packages
+
+      - name: Compilar PWA Móvil
+        run: npm run build --workspace=@rexjar/mobile-pwa
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Subir artefacto de producción
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'apps/mobile-pwa/dist'
+
+      - name: Desplegar a GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

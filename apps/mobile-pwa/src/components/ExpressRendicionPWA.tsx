@@ -32,7 +32,14 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 
-import { saveExpenseOffline, getPendingExpensesCount, optimizeImageWithWorker } from "@/services/expenseSyncService"
+import { saveExpenseOffline, getPendingExpensesCount, optimizeImageWithWorker, syncPendingExpenses } from "@/services/expenseSyncService"
+import { CollaboratorSession } from "@/services/authStorage"
+import { RefreshCw, UserCheck, KeyRound } from "lucide-react"
+
+interface ExpressRendicionPWAProps {
+  collaboratorSession?: CollaboratorSession | null;
+  onRequestLogin?: () => void;
+}
 
 const chips = [
   { label: "+ Peaje", amount: "S/ 6.50", value: 6.50, icon: MapPin },
@@ -43,12 +50,13 @@ const chips = [
 
 const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "⌫"]
 
-export default function Page() {
+export default function ExpressRendicionPWA({ collaboratorSession, onRequestLogin }: ExpressRendicionPWAProps) {
   const [step, setStep] = useState("scan")
   const [activeChips, setActiveChips] = useState<number[]>([0])
   const [split, setSplit] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [pendingCount, setPendingCount] = useState(0)
+  const [isSyncing, setIsSyncing] = useState(false)
   const [baseAmount, setBaseAmount] = useState(25.00)
   const [manualInput, setManualInput] = useState("")
 
@@ -56,6 +64,17 @@ export default function Page() {
   useState(() => {
     getPendingExpensesCount().then(setPendingCount)
   })
+
+  const handleManualSync = async () => {
+    setIsSyncing(true)
+    try {
+      await syncPendingExpenses()
+      const count = await getPendingExpensesCount()
+      setPendingCount(count)
+    } finally {
+      setIsSyncing(false)
+    }
+  }
 
   const toggleChip = (index: number) => {
     setActiveChips((current) => current.includes(index) ? current.filter((item) => item !== index) : [...current, index])
@@ -100,13 +119,59 @@ export default function Page() {
 
   return (
     <main className="min-h-dvh bg-[#f8fafc] pb-20 text-[#0f172a]">
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-md sm:px-6">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-md sm:px-6">
         <div className="mx-auto flex max-w-2xl items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#0f172a] text-white"><ReceiptText /></div>
-            <div className="min-w-0"><p className="truncate text-base font-black tracking-tight">REXJAR Mobile</p><Badge className="mt-0.5 gap-1 bg-emerald-100 text-emerald-700 hover:bg-emerald-100"><ShieldCheck /> Offline Ready</Badge></div>
+            <div className="min-w-0">
+              <p className="truncate text-base font-black tracking-tight">Rendición Express</p>
+              <Badge className="mt-0.5 gap-1 bg-emerald-100 text-emerald-700 hover:bg-emerald-100"><ShieldCheck className="size-3" /> Offline Ready</Badge>
+            </div>
           </div>
-          <div className="flex min-h-12 shrink-0 items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 text-right"><div className="size-2 rounded-full bg-[#2563eb]" /><div><p className="text-[10px] font-bold uppercase tracking-wider text-blue-600">Cola de sync</p><p className="text-xs font-bold text-[#0f172a]">2 encolados offline</p></div></div>
+          <button 
+            onClick={handleManualSync} 
+            disabled={isSyncing}
+            className="flex min-h-12 shrink-0 items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 text-right hover:bg-blue-100 transition-colors"
+            title="Presiona para sincronizar con el backend"
+          >
+            <div className={cn("size-2 rounded-full", isSyncing ? "bg-amber-500 animate-ping" : "bg-[#2563eb]")} />
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-blue-600 flex items-center gap-1">
+                {isSyncing ? "Sincronizando..." : "Cola de sync"}
+                <RefreshCw className={cn("size-2.5", isSyncing && "animate-spin")} />
+              </p>
+              <p className="text-xs font-bold text-[#0f172a]">
+                {pendingCount === 0 ? "Al día (0 en cola)" : `${pendingCount} pendientes`}
+              </p>
+            </div>
+          </button>
+        </div>
+
+        {/* Tarjeta de Identidad de Colaborador */}
+        <div className="mx-auto max-w-2xl mt-2.5">
+          {collaboratorSession ? (
+            <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 text-xs">
+              <div className="flex items-center gap-2 text-emerald-950 font-bold">
+                <UserCheck className="size-4 text-emerald-600 shrink-0" />
+                <span>Colaborador: {collaboratorSession.user.fullName} · {collaboratorSession.company.legalName}</span>
+              </div>
+              <span className="text-[10px] bg-emerald-200/70 text-emerald-900 font-extrabold px-2 py-0.5 rounded-full">
+                RLS Activo
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 text-xs">
+              <div className="flex items-center gap-2 text-amber-900 font-medium">
+                <span>⚠️ Rendición anónima de prueba.</span>
+              </div>
+              <button 
+                onClick={onRequestLogin}
+                className="flex items-center gap-1 font-bold text-blue-600 hover:text-blue-800 bg-white border border-blue-200 px-2 py-1 rounded-lg text-xs shadow-sm"
+              >
+                <KeyRound className="size-3" /> Iniciar Sesión
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
