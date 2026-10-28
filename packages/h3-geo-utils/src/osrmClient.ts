@@ -1,4 +1,6 @@
 // packages/h3-geo-utils/src/osrmClient.ts
+declare const process: any;
+
 export interface RouteResult {
     distanceKm: number;
     durationMin: number;

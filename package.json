@@ -25,6 +25,10 @@
     "pwa",
     "ocr"
   ],
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  },
   "author": "REXJAR Team",
   "license": "UNLICENSED"
 }
