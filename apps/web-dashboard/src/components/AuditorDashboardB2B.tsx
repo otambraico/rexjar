@@ -14,7 +14,6 @@ import {
   Filter,
   Gauge,
   LogOut,
-  MoreHorizontal,
   Search,
   ShieldCheck,
   User,
@@ -36,17 +35,127 @@ type Claim = {
   score: string
   risk: Risk
   confidence: string
+  originAddress: string
+  destAddress: string
+  distanceKm: string
+  durationMin: string
   selected?: boolean
 }
 
 const mockClaims: Claim[] = [
-  { id: 'EXP-1092', date: '08/10/2026', employee: 'Carlos Mendoza', department: 'Ventas Terreno', category: 'TAXI', amount: 'S/ 35.00', benchmark: 'S/ 24.50', score: '+42.8% Alerta Fraude', risk: 'fraud', confidence: '95%' },
-  { id: 'EXP-1088', date: '08/10/2026', employee: 'Valeria Torres', department: 'Operaciones', category: 'PEAJE', amount: 'S/ 18.00', benchmark: 'S/ 17.10', score: '+5.2% Normal', risk: 'normal', confidence: '98%', selected: true },
-  { id: 'EXP-1084', date: '08/10/2026', employee: 'Jorge Salazar', department: 'Logística', category: 'TAXI', amount: 'S/ 29.00', benchmark: 'S/ 23.35', score: '+24.1% Riesgo', risk: 'risk', confidence: '91%' },
-  { id: 'EXP-1079', date: '07/10/2026', employee: 'Ana Lucía Ríos', department: 'Finanzas', category: 'ESTACIONAMIENTO', amount: 'S/ 12.00', benchmark: 'S/ 11.40', score: '+5.3% Normal', risk: 'normal', confidence: '96%' },
-  { id: 'EXP-1076', date: '07/10/2026', employee: 'Miguel Navarro', department: 'Compras', category: 'PEAJE', amount: 'S/ 22.00', benchmark: 'S/ 17.80', score: '+23.6% Riesgo', risk: 'risk', confidence: '89%' },
-  { id: 'EXP-1072', date: '07/10/2026', employee: 'Lucía Paredes', department: 'RR. HH.', category: 'TAXI', amount: 'S/ 41.00', benchmark: 'S/ 28.50', score: '+43.9% Alerta Fraude', risk: 'fraud', confidence: '93%' },
-  { id: 'EXP-1068', date: '06/10/2026', employee: 'Renzo Cabrera', department: 'Ventas', category: 'TAXI', amount: 'S/ 26.50', benchmark: 'S/ 24.90', score: '+6.4% Normal', risk: 'normal', confidence: '97%' },
+  { 
+    id: 'EXP-1092', 
+    date: '08/10/2026', 
+    employee: 'Carlos Mendoza', 
+    department: 'Ventas Terreno', 
+    category: 'TAXI', 
+    amount: 'S/ 35.00', 
+    benchmark: 'S/ 24.50', 
+    score: '+42.8% Alerta Fraude', 
+    risk: 'fraud', 
+    confidence: '95%',
+    originAddress: 'Miraflores (Parque Kennedy)',
+    destAddress: 'San Isidro (Las Begonias)',
+    distanceKm: '5.2 km',
+    durationMin: '14 min'
+  },
+  { 
+    id: 'EXP-1088', 
+    date: '08/10/2026', 
+    employee: 'Valeria Torres', 
+    department: 'Operaciones', 
+    category: 'PEAJE', 
+    amount: 'S/ 18.00', 
+    benchmark: 'S/ 17.10', 
+    score: '+5.2% Normal', 
+    risk: 'normal', 
+    confidence: '98%',
+    originAddress: 'Surco (Jockey Plaza)',
+    destAddress: 'Jesús María (Salaverry)',
+    distanceKm: '6.4 km',
+    durationMin: '18 min',
+    selected: true 
+  },
+  { 
+    id: 'EXP-1084', 
+    date: '08/10/2026', 
+    employee: 'Jorge Salazar', 
+    department: 'Logística', 
+    category: 'TAXI', 
+    amount: 'S/ 29.00', 
+    benchmark: 'S/ 23.35', 
+    score: '+24.1% Riesgo', 
+    risk: 'risk', 
+    confidence: '91%',
+    originAddress: 'Callao (Aeropuerto Jorge Chávez)',
+    destAddress: 'Miraflores (Larcomar)',
+    distanceKm: '18.2 km',
+    durationMin: '42 min'
+  },
+  { 
+    id: 'EXP-1079', 
+    date: '07/10/2026', 
+    employee: 'Ana Lucía Ríos', 
+    department: 'Finanzas', 
+    category: 'ESTACIONAMIENTO', 
+    amount: 'S/ 12.00', 
+    benchmark: 'S/ 11.40', 
+    score: '+5.3% Normal', 
+    risk: 'normal', 
+    confidence: '96%',
+    originAddress: 'San Borja (La Rambla)',
+    destAddress: 'Cercado de Lima (Centro Cívico)',
+    distanceKm: '7.8 km',
+    durationMin: '25 min'
+  },
+  { 
+    id: 'EXP-1076', 
+    date: '07/10/2026', 
+    employee: 'Miguel Navarro', 
+    department: 'Compras', 
+    category: 'PEAJE', 
+    amount: 'S/ 22.00', 
+    benchmark: 'S/ 17.80', 
+    score: '+23.6% Riesgo', 
+    risk: 'risk', 
+    confidence: '89%',
+    originAddress: 'La Victoria (Gamarra)',
+    destAddress: 'San Isidro (Centro Financiero)',
+    distanceKm: '4.5 km',
+    durationMin: '16 min'
+  },
+  { 
+    id: 'EXP-1072', 
+    date: '07/10/2026', 
+    employee: 'Lucía Paredes', 
+    department: 'RR. HH.', 
+    category: 'TAXI', 
+    amount: 'S/ 41.00', 
+    benchmark: 'S/ 28.50', 
+    score: '+43.9% Alerta Fraude', 
+    risk: 'fraud', 
+    confidence: '93%',
+    originAddress: 'Independencia (Plaza Norte)',
+    destAddress: 'Miraflores (Parque Kennedy)',
+    distanceKm: '16.5 km',
+    durationMin: '38 min'
+  },
+  { 
+    id: 'EXP-1068', 
+    date: '06/10/2026', 
+    employee: 'Renzo Cabrera', 
+    department: 'Ventas', 
+    category: 'TAXI', 
+    amount: 'S/ 26.50', 
+    benchmark: 'S/ 24.90', 
+    score: '+6.4% Normal', 
+    risk: 'normal', 
+    confidence: '97%',
+    originAddress: 'San Miguel (Plaza San Miguel)',
+    destAddress: 'San Isidro (Av. Conquistadores)',
+    distanceKm: '7.2 km',
+    durationMin: '22 min'
+  },
 ]
 
 const riskFilters: { label: string; value: 'all' | Risk }[] = [
@@ -71,7 +180,7 @@ export default function AuditorDashboardB2B() {
       return null
     }
   })
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
+
   const [activeRisk, setActiveRisk] = useState<'all' | Risk>('all')
   const [query, setQuery] = useState('')
   const [claimsList, setClaimsList] = useState<Claim[]>(mockClaims)
@@ -81,8 +190,10 @@ export default function AuditorDashboardB2B() {
 
   // Cargar datos reales desde la API Backend de REXJAR con el token de sesión
   useEffect(() => {
+    if (!authSession) return
+
     const headers: Record<string, string> = {}
-    if (authSession?.token) {
+    if (authSession.token) {
       headers['Authorization'] = `Bearer ${authSession.token}`
     }
 
@@ -104,7 +215,11 @@ export default function AuditorDashboardB2B() {
               benchmark: 'S/ 24.50',
               score: `+${anomalyScore}% ${risk === 'fraud' ? 'Alerta Fraude' : risk === 'risk' ? 'Riesgo' : 'Normal'}`,
               risk,
-              confidence: '95%'
+              confidence: '95%',
+              originAddress: item.origin_address || 'Miraflores (Lima)',
+              destAddress: item.destination_address || 'San Isidro (Lima)',
+              distanceKm: item.distance_km ? `${item.distance_km} km` : '5.2 km',
+              durationMin: item.duration_min ? `${item.duration_min} min` : '14 min'
             }
           })
           setClaimsList(mapped)
@@ -119,7 +234,6 @@ export default function AuditorDashboardB2B() {
   function handleLogout() {
     localStorage.removeItem('rexjar_b2b_auth')
     setAuthSession(null)
-    setIsLoginModalOpen(true)
   }
 
   // Acción de Aprobación en 1-Tap con disparo Zero-PII
@@ -157,18 +271,22 @@ export default function AuditorDashboardB2B() {
     setChecked((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id])
   }
 
+  // SI NO HAY SESIÓN ACTIVA: Renderizar directamente la pantalla de Login Corporativo sin datos falsos detrás
+  if (!authSession) {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-4">
+        <CorporateLoginModal
+          isOpen={true}
+          onLoginSuccess={(session) => {
+            setAuthSession(session)
+          }}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans">
-      {/* Modal de Autenticación Corporativa B2B */}
-      <CorporateLoginModal
-        isOpen={isLoginModalOpen}
-        onLoginSuccess={(session) => {
-          setAuthSession(session)
-          setIsLoginModalOpen(false)
-        }}
-        onClose={() => setIsLoginModalOpen(false)}
-      />
-
       {/* Encabezado Corporativo de Alto Contraste (Paleta WebApp) */}
       <header className="sticky top-0 z-20 flex h-[64px] items-center justify-between border-b border-slate-700/60 bg-[#102b4e] px-5 text-white shadow-md">
         <div className="flex min-w-0 items-center gap-5">
@@ -179,18 +297,16 @@ export default function AuditorDashboardB2B() {
             <div className="min-w-0">
               <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#9ed6e5]">REXJAR B2B</p>
               <h1 className="max-w-[280px] truncate text-[13px] font-bold text-white">
-                {authSession ? authSession.company.legalName : 'Portal Corporativo de Auditoría'}
+                {authSession.company.legalName}
               </h1>
             </div>
           </div>
 
-          {authSession && (
-            <div className="hidden items-center gap-2 text-xs font-semibold text-slate-300 xl:flex">
-              <span className="rounded bg-slate-800 px-2 py-0.5 font-mono text-[10px] text-slate-200 border border-slate-600">
-                RUC {authSession.company.taxId}
-              </span>
-            </div>
-          )}
+          <div className="hidden items-center gap-2 text-xs font-semibold text-slate-300 xl:flex">
+            <span className="rounded bg-slate-800 px-2 py-0.5 font-mono text-[10px] text-slate-200 border border-slate-600">
+              RUC {authSession.company.taxId}
+            </span>
+          </div>
 
           <div className="hidden items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 lg:flex">
             <ShieldCheck className="size-4 text-emerald-400" />
@@ -201,37 +317,26 @@ export default function AuditorDashboardB2B() {
         {/* Sección de Usuario / Sesión */}
         <div className="flex items-center gap-3">
           <div className="hidden items-center gap-2.5 sm:flex">
-            <Stat label="Pendientes" value="14" tone="amber" />
+            <Stat label="Pendientes" value={claimsList.length.toString()} tone="amber" />
             <Stat label="Aprobados hoy" value="42" tone="emerald" />
             <Stat label="Anomalías" value="3" tone="rose" />
           </div>
 
-          {authSession ? (
-            <div className="flex items-center gap-2 border-l border-slate-700 pl-4">
-              <div className="text-right hidden md:block">
-                <p className="text-xs font-bold text-white leading-tight">{authSession.user.fullName}</p>
-                <p className="text-[10px] font-semibold text-blue-200">{authSession.user.role}</p>
-              </div>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="flex items-center gap-1.5 rounded-lg border border-slate-600 bg-slate-800/80 px-2.5 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-700 hover:text-white transition-colors"
-                title="Cerrar Sesión Corporativa"
-              >
-                <LogOut className="size-3.5" />
-                <span className="hidden sm:inline">Salir</span>
-              </button>
+          <div className="flex items-center gap-2 border-l border-slate-700 pl-4">
+            <div className="text-right hidden md:block">
+              <p className="text-xs font-bold text-white leading-tight">{authSession.user.fullName}</p>
+              <p className="text-[10px] font-semibold text-blue-200">{authSession.user.role}</p>
             </div>
-          ) : (
             <button
               type="button"
-              onClick={() => setIsLoginModalOpen(true)}
-              className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition-all"
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 rounded-lg border border-slate-600 bg-slate-800/80 px-2.5 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-700 hover:text-white transition-colors"
+              title="Cerrar Sesión Corporativa"
             >
-              <User className="size-3.5" />
-              <span>Iniciar Sesión B2B</span>
+              <LogOut className="size-3.5" />
+              <span className="hidden sm:inline">Salir</span>
             </button>
-          )}
+          </div>
 
           <a
             href="http://localhost:5173"
@@ -425,7 +530,7 @@ export default function AuditorDashboardB2B() {
                 </span>
               </div>
 
-              {/* Simulación de Boleta de Taxi */}
+              {/* Simulación de Boleta de Taxi con Bounding Box NO Invasivo */}
               <div className="relative mx-auto h-[250px] w-[88%] my-3 rounded-lg border border-slate-200 bg-[#fbfaf8] p-5 font-mono text-slate-800 shadow-inner">
                 <div className="flex items-start justify-between border-b border-slate-300 pb-2">
                   <div>
@@ -437,20 +542,24 @@ export default function AuditorDashboardB2B() {
                   </div>
                 </div>
 
-                <div className="mt-3 space-y-1 text-[9px] text-slate-700 font-medium">
+                <div className="mt-3 space-y-1.5 text-[9px] text-slate-700 font-medium">
                   <div className="flex justify-between"><span>Fecha de Emisión:</span><span>{currentClaim.date} 16:42</span></div>
-                  <div className="flex justify-between"><span>Origen:</span><span>Miraflores, Lima</span></div>
-                  <div className="flex justify-between"><span>Destino:</span><span>San Isidro, Lima</span></div>
-                  <div className="flex justify-between"><span>Distancia Recorrida:</span><span>5.2 km</span></div>
+                  <div className="flex justify-between"><span>Origen:</span><span className="font-bold text-slate-900">{currentClaim.originAddress}</span></div>
+                  <div className="flex justify-between"><span>Destino:</span><span className="font-bold text-slate-900">{currentClaim.destAddress}</span></div>
+                  <div className="flex justify-between"><span>Distancia Recorrida:</span><span>{currentClaim.distanceKm}</span></div>
                 </div>
 
+                {/* Línea Total Pagado con Bounding Box transparente que NO bloquea el texto */}
                 <div className="absolute bottom-6 left-5 right-5 border-t border-slate-300 pt-2 text-[11px] font-bold">
-                  <div className="flex justify-between text-slate-900"><span>TOTAL PAGADO:</span><span>{currentClaim.amount}</span></div>
-                </div>
-
-                {/* Bounding Box en Verde Esmeralda */}
-                <div className="absolute bottom-[18px] right-[18px] rounded border-2 border-emerald-600 bg-emerald-100/60 px-2 py-0.5 text-[13px] font-extrabold text-emerald-950 shadow-xs">
-                  {currentClaim.amount}
+                  <div className="flex justify-between items-center text-slate-900">
+                    <span>TOTAL PAGADO:</span>
+                    <span className="relative font-extrabold text-slate-950 px-2 py-0.5 rounded border-2 border-emerald-500 bg-emerald-500/10 shadow-xs">
+                      {currentClaim.amount}
+                      <span className="absolute -top-3.5 right-0 rounded bg-emerald-600 px-1 py-0.2 text-[8px] font-sans font-bold text-white shadow-xs">
+                        OCR {currentClaim.confidence}
+                      </span>
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -458,11 +567,11 @@ export default function AuditorDashboardB2B() {
                 <span className="flex items-center gap-1.5">
                   <span className="size-2 rounded-full bg-emerald-500" /> Bounding box · Total detectado por OCR
                 </span>
-                <span className="font-bold text-slate-800">95% Confianza</span>
+                <span className="font-bold text-slate-800">{currentClaim.confidence} Confianza</span>
               </div>
             </div>
 
-            {/* Scorecard de Desviación Geoespacial H3 */}
+            {/* Scorecard de Desviación Geoespacial H3 con Ruta Real */}
             <div className="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
@@ -473,11 +582,25 @@ export default function AuditorDashboardB2B() {
               </div>
 
               <div className="grid grid-cols-2 gap-3 pt-3">
-                <Metric label="Par H3-8 Origen / Destino" value="886b8c092dfffff → 886b8c0817fffff" wide />
-                <Metric label="Distancia OSRM" value="5.2 km" />
-                <Metric label="Tiempo Estimado" value="14 min" />
-                <Metric label="Tarifa Base Teórica" value="S/ 24.50" />
-                <Metric label="Benchmark P75 Mercado" value="S/ 24.50" />
+                {/* Ruta Urbana Real con Certificación H3 */}
+                <div className="col-span-2 rounded-xl bg-slate-50 border border-slate-200 p-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Ruta Urbana Declarada</p>
+                    <span className="rounded bg-emerald-100 border border-emerald-300 px-1.5 py-0.5 text-[9px] font-bold text-emerald-800">
+                      Celdas H3-8 Calibradas
+                    </span>
+                  </div>
+                  <p className="text-xs font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">
+                    <span className="text-blue-700">📍 {currentClaim.originAddress}</span>
+                    <span className="text-slate-400 font-extrabold">➔</span>
+                    <span className="text-amber-700">🏁 {currentClaim.destAddress}</span>
+                  </p>
+                </div>
+
+                <Metric label="Distancia OSRM" value={currentClaim.distanceKm} />
+                <Metric label="Tiempo Estimado" value={currentClaim.durationMin} />
+                <Metric label="Tarifa Base Teórica" value={currentClaim.benchmark} />
+                <Metric label="Benchmark P75 Mercado" value={currentClaim.benchmark} />
 
                 <div className="col-span-2 mt-1 flex items-end justify-between rounded-lg border border-rose-300 bg-rose-50 p-3">
                   <div>
@@ -498,7 +621,7 @@ export default function AuditorDashboardB2B() {
                 <p className="text-xs font-bold text-amber-900">Recomendación del Motor REXJAR</p>
               </div>
               <p className="mt-1.5 text-xs leading-relaxed text-amber-800 font-medium">
-                El importe declarado supera en más de 35% el percentil P75 registrado para ese corredor geográfico en Lima. Se sugiere solicitar sustento de tráfico extremo antes de aprobar el reembolso.
+                El importe declarado supera en más de 35% el percentil P75 registrado para la ruta entre <strong className="text-slate-900">{currentClaim.originAddress}</strong> y <strong className="text-slate-900">{currentClaim.destAddress}</strong>. Se sugiere solicitar sustento de tráfico extremo antes de autorizar el reembolso.
               </p>
             </div>
           </div>

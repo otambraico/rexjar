@@ -164,6 +164,15 @@ export function CorporateLoginModal({ isOpen, onLoginSuccess, onClose }: Corpora
           <div className="border-t border-slate-100 pt-3 text-center text-[10px] text-slate-500">
             🔒 Los datos contables y comprobantes se aíslan de forma criptográfica por empresa empleadora.
           </div>
+
+          <div className="pt-1 text-center">
+            <a
+              href="http://localhost:5173"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              ← Ir a Tarifas Perú (App Móvil Pública)
+            </a>
+          </div>
         </form>
       </div>
     </div>
