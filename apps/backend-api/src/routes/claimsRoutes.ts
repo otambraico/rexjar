@@ -2,12 +2,26 @@ import { Router, Request, Response } from 'express';
 import { pool, setTenantContext } from '../config/db';
 import { calculateAnomalyScore, calculateTheoreticalBaseFare, getH3Cell } from '@rexjar/h3-geo-utils';
 import { dispatchZeroPiiMobilityEvent } from '../services/anonymizerService';
+import { verifyToken } from '../services/authService';
 
 export const claimsRouter = Router();
 
+function resolveCompanyId(req: Request): string {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    try {
+      const payload = verifyToken(authHeader.split(' ')[1]);
+      if (payload && payload.companyId) {
+        return payload.companyId;
+      }
+    } catch {}
+  }
+  return (req.headers['x-company-id'] as string) || '5568d575-e53e-4b81-9719-3d330dfb5787';
+}
+
 // GET /api/v1/claims - Listado para la mesa de auditoría B2B
 claimsRouter.get('/', async (req: Request, res: Response) => {
-  const companyId = (req.headers['x-company-id'] as string) || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+  const companyId = resolveCompanyId(req);
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -51,7 +65,7 @@ claimsRouter.get('/', async (req: Request, res: Response) => {
 
 // POST /api/v1/claims - Registrar nueva rendición desde la PWA Móvil
 claimsRouter.post('/', async (req: Request, res: Response) => {
-  const companyId = (req.headers['x-company-id'] as string) || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+  const companyId = resolveCompanyId(req);
   const { title, totalAmount, category, extras, originLat, originLng, destLat, destLng, distanceKm, durationMin } = req.body;
 
   const client = await pool.connect();
@@ -107,7 +121,7 @@ claimsRouter.post('/', async (req: Request, res: Response) => {
 claimsRouter.patch('/:id/status', async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status } = req.body;
-  const companyId = (req.headers['x-company-id'] as string) || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+  const companyId = resolveCompanyId(req);
 
   if (!['APPROVED', 'REJECTED'].includes(status)) {
     return res.status(400).json({ success: false, error: 'Estado no válido' });
